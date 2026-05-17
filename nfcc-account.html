@@ -131,6 +131,14 @@
     .btn-cancel{flex:1;padding:12px;background:var(--dark);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer}
     @media(min-width:480px){.modal-overlay{align-items:center}.modal{border-radius:24px;max-width:430px}}
 
+    /* ── PIN KEYPAD ── */
+    .pk{padding:0;height:58px;background:var(--card2);border:1px solid var(--border);border-radius:14px;color:var(--text);font-size:22px;font-weight:600;cursor:pointer;transition:all .15s;width:100%}
+    .pk:active{transform:scale(.92);background:var(--accent);border-color:var(--accent)}
+    .pk-ghost{background:transparent;border-color:transparent;font-size:18px;color:var(--muted)}
+    .pk-ghost:active{background:var(--card2);border-color:var(--border);color:var(--text)}
+    .pk-accent{background:var(--accent);border-color:var(--accent);font-size:20px}
+    .pk-accent:active{opacity:.8}
+
     /* ── SPINNER ── */
     .spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
     @keyframes spin{to{transform:rotate(360deg)}}
@@ -184,22 +192,28 @@
     <!-- PIN panel -->
     <div id="loginPin" style="display:none">
       <p class="sub">Enter the 4-digit PIN to view the ledger.</p>
-      <div class="pin-display" style="margin-bottom:20px">
+      <div style="display:flex;justify-content:center;gap:14px;margin-bottom:28px">
         <div class="pin-dot" id="pd0"></div>
         <div class="pin-dot" id="pd1"></div>
         <div class="pin-dot" id="pd2"></div>
         <div class="pin-dot" id="pd3"></div>
       </div>
-      <div class="keypad">
-        <button onclick="pinKey('1')">1</button><button onclick="pinKey('2')">2</button><button onclick="pinKey('3')">3</button>
-        <button onclick="pinKey('4')">4</button><button onclick="pinKey('5')">5</button><button onclick="pinKey('6')">6</button>
-        <button onclick="pinKey('7')">7</button><button onclick="pinKey('8')">8</button><button onclick="pinKey('9')">9</button>
-        <button class="key-clear" onclick="pinClear()">⌫</button>
-        <button onclick="pinKey('0')">0</button>
-        <button class="key-enter" onclick="submitPin()">Enter</button>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:260px;margin:0 auto">
+        <button class="pk" onclick="pinKey('1')">1</button>
+        <button class="pk" onclick="pinKey('2')">2</button>
+        <button class="pk" onclick="pinKey('3')">3</button>
+        <button class="pk" onclick="pinKey('4')">4</button>
+        <button class="pk" onclick="pinKey('5')">5</button>
+        <button class="pk" onclick="pinKey('6')">6</button>
+        <button class="pk" onclick="pinKey('7')">7</button>
+        <button class="pk" onclick="pinKey('8')">8</button>
+        <button class="pk" onclick="pinKey('9')">9</button>
+        <button class="pk pk-ghost" onclick="pinClear()">⌫</button>
+        <button class="pk" onclick="pinKey('0')">0</button>
+        <button class="pk pk-accent" onclick="submitPin()">↵</button>
       </div>
-      <div class="err" id="pinErr" style="margin-top:12px"></div>
-      <div style="margin-top:16px">
+      <div class="err" id="pinErr" style="margin-top:16px"></div>
+      <div style="margin-top:18px">
         <a style="font-size:13px;color:var(--muted);cursor:pointer" onclick="showLoginMain()">← Back</a>
       </div>
     </div>
