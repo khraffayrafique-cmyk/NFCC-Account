@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NFCC Team Account</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --green:#2ecc71;--red:#e74c3c;--dark:#1a1a2e;--card:#16213e;
+      --card2:#0f3460;--accent:#e94560;--text:#eaeaea;--muted:#8892a4;--border:#253556;
+    }
+    body{font-family:'Segoe UI',sans-serif;background:var(--dark);color:var(--text);min-height:100vh}
+
+    /* ── SCREENS ── */
+    .screen{display:none;min-height:100vh;align-items:center;justify-content:center;padding:20px;flex-direction:column}
+    .screen.active{display:flex}
+
+    /* ── SETUP ── */
+    .setup-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px 28px;max-width:480px;width:100%}
+    .setup-card h2{font-size:20px;margin-bottom:10px}
+    .setup-card .note{color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:16px}
+    .setup-card code{display:block;background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:11.5px;color:#a8d8ea;line-height:1.9;white-space:pre;overflow-x:auto;margin-bottom:18px}
+    #fbConfigInput{width:100%;padding:12px;background:var(--dark);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-family:monospace;height:130px;resize:vertical;outline:none;transition:border-color .2s}
+    #fbConfigInput:focus{border-color:var(--accent)}
+    .setup-steps{margin-bottom:20px}
+    .setup-steps li{color:var(--muted);font-size:13px;padding:5px 0;padding-left:4px;line-height:1.6;list-style:decimal inside}
+    .setup-steps li strong{color:var(--text)}
+    .err{color:var(--red);font-size:13px;margin-top:10px;min-height:18px}
+
+    /* ── LOGIN ── */
+    .auth-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px 32px;width:100%;max-width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+    .auth-card .logo{font-size:46px;margin-bottom:10px}
+    .auth-card h1{font-size:22px;font-weight:700;margin-bottom:6px}
+    .auth-card .sub{color:var(--muted);font-size:13px;margin-bottom:32px;line-height:1.6}
+    .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;background:#fff;border:none;border-radius:12px;color:#1a1a2e;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .2s;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+    .google-btn:hover{opacity:.9}
+    .google-btn svg{width:20px;height:20px;flex-shrink:0}
+    .auth-note{margin-top:18px;font-size:12px;color:var(--muted);line-height:1.6}
+
+    /* ── HEADER ── */
+    header{background:var(--card);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+    .hdr-left h2{font-size:17px;font-weight:700}
+    .hdr-left .hsub{font-size:11px;color:var(--muted);margin-top:1px}
+    .hdr-right{display:flex;align-items:center;gap:10px}
+    .avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid var(--border)}
+    .avatar-fallback{width:32px;height:32px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;border:2px solid var(--border)}
+    .badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+    .badge.super_admin{background:rgba(233,69,96,.25);color:#ff6b8a}
+    .badge.admin{background:rgba(233,69,96,.15);color:var(--accent)}
+    .badge.member{background:rgba(46,204,113,.15);color:var(--green)}
+    #logoutBtn{background:transparent;border:1px solid var(--border);color:var(--muted);font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer}
+    #logoutBtn:hover{border-color:var(--accent);color:var(--accent)}
+
+    /* ── TABS ── */
+    .tab-bar{display:flex;background:var(--card);border-bottom:1px solid var(--border);padding:0 18px}
+    .tab-bar button{padding:13px 18px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+    .tab-bar button.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+    /* ── BALANCE ── */
+    .balance-section{padding:18px}
+    .balance-card{background:linear-gradient(135deg,#0f3460,#16213e);border:1px solid var(--border);border-radius:20px;padding:26px 22px;text-align:center;position:relative;overflow:hidden}
+    .balance-card::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;background:rgba(233,69,96,.08);border-radius:50%}
+    .blbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .bamt{font-size:42px;font-weight:800;letter-spacing:-1px}
+    .bamt.pos{color:var(--green)}.bamt.neg{color:var(--red)}
+    .stats{display:flex;justify-content:center;gap:28px;margin-top:18px;padding-top:18px;border-top:1px solid var(--border)}
+    .stat .val{font-size:15px;font-weight:700}.stat .lbl{font-size:11px;color:var(--muted);margin-top:2px}
+    .stat .val.inc{color:var(--green)}.stat .val.dec{color:var(--red)}
+
+    /* ── ACTIONS ── */
+    .actions{padding:0 18px 14px;display:flex;gap:10px}
+    .btn-primary{flex:1;padding:12px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s}
+    .btn-primary:hover{opacity:.85}
+    .btn-secondary{flex:1;padding:12px;background:var(--card2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;font-weight:600;cursor:pointer}
+
+    /* ── LEDGER ── */
+    .ledger-section{padding:0 18px 80px}
+    .ledger-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .ledger-header h3{font-size:14px;font-weight:700}
+    .filter-tabs{display:flex;gap:6px}
+    .filter-tabs button{padding:5px 11px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;transition:all .2s}
+    .filter-tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+    .ledger-list{display:flex;flex-direction:column;gap:9px}
+    .entry{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px}
+    .entry:hover{border-color:#3a4a6a}
+    .eicon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+    .eicon.credit{background:rgba(46,204,113,.15)}.eicon.debit{background:rgba(231,76,60,.15)}
+    .einfo{flex:1;min-width:0}
+    .einfo .desc{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .einfo .meta{font-size:11px;color:var(--muted);margin-top:2px}
+    .eright{text-align:right;flex-shrink:0}
+    .eamt{font-size:15px;font-weight:700}
+    .eamt.credit{color:var(--green)}.eamt.debit{color:var(--red)}
+    .ebal{font-size:11px;color:var(--muted);margin-top:2px}
+    .eactions{display:flex;gap:5px;flex-shrink:0}
+    .icon-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+    .icon-btn:hover{background:var(--card2);color:var(--text)}
+    .icon-btn.del:hover{border-color:var(--red);color:var(--red)}
+    .empty-state{text-align:center;padding:50px 20px;color:var(--muted)}
+    .empty-ico{font-size:44px;margin-bottom:10px}
+
+    /* ── USERS TAB ── */
+    .users-section{padding:18px 18px 80px;display:flex;flex-direction:column;gap:10px}
+    .user-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+    .u-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0}
+    .u-avatar-fb{width:40px;height:40px;border-radius:50%;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;border:2px solid var(--border)}
+    .uinfo{flex:1;min-width:0}
+    .uname{font-size:14px;font-weight:600}
+    .uemail{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .role-select{padding:6px 10px;background:var(--dark);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;cursor:pointer;outline:none;transition:border-color .2s}
+    .role-select:focus{border-color:var(--accent)}
+    .users-loading{text-align:center;padding:40px;color:var(--muted)}
+
+    /* ── MODALS ── */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:flex-end;justify-content:center}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--card);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:26px 22px 38px;width:100%;max-width:480px;animation:slideUp .28s ease}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .modal h3{font-size:17px;font-weight:700;margin-bottom:18px}
+    .type-toggle{display:flex;background:var(--dark);border-radius:12px;padding:4px;margin-bottom:18px;gap:4px}
+    .type-toggle button{flex:1;padding:9px;border:none;border-radius:9px;background:transparent;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .2s}
+    .type-toggle button.credit.active{background:rgba(46,204,113,.2);color:var(--green)}
+    .type-toggle button.debit.active{background:rgba(231,76,60,.2);color:var(--red)}
+    .form-group{margin-bottom:14px}
+    .form-group label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+    .form-group input,.form-group select{width:100%;padding:12px 13px;background:var(--dark);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;transition:border-color .2s}
+    .form-group input:focus,.form-group select:focus{border-color:var(--accent)}
+    .form-group select option{background:var(--dark)}
+    .modal-actions{display:flex;gap:10px;margin-top:20px}
+    .btn-cancel{flex:1;padding:12px;background:var(--dark);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer}
+    @media(min-width:480px){.modal-overlay{align-items:center}.modal{border-radius:24px;max-width:430px}}
+
+    /* ── SPINNER ── */
+    .spinner{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ── TOAST ── */
+    #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#2d2d2d;color:#fff;padding:11px 20px;border-radius:30px;font-size:13px;font-weight:600;z-index:999;transition:transform .3s;white-space:nowrap;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+    #toast.show{transform:translateX(-50%) translateY(0)}
+    #toast.success{background:#1a5c36}
+    #toast.error{background:#5c1a1a}
+  </style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="screen active" id="loadingScreen">
+  <div class="spinner"></div>
+  <p style="color:var(--muted);font-size:14px">Connecting…</p>
+</div>
+
+<!-- FIREBASE SETUP -->
+<div class="screen" id="setupScreen">
+  <div class="setup-card">
+    <h2>🔧 Connect Firebase</h2>
+    <p class="note">One-time setup. Create a free Firebase project and paste your config below.</p>
+    <ol class="setup-steps">
+      <li>Go to <strong>console.firebase.google.com</strong> → New project</li>
+      <li><strong>Firestore Database</strong> → Create → Test mode</li>
+      <li><strong>Authentication</strong> → Sign-in method → Enable <strong>Google</strong></li>
+      <li>Project Settings → Your Apps → Web → Copy config</li>
+    </ol>
+    <code>const firebaseConfig = {
+  apiKey: "AIza...",
+  authDomain: "your-app.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-app.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123..."
+};</code>
+    <textarea id="fbConfigInput" placeholder="Paste your firebaseConfig = { ... } here"></textarea>
+    <button class="btn-primary" style="width:100%;margin-top:14px" onclick="applyConfig()">Connect →</button>
+    <div class="err" id="setupErr"></div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="screen" id="loginScreen">
+  <div class="auth-card">
+    <div class="logo">⚽</div>
+    <h1>NFCC Team Account</h1>
+    <p class="sub">Sign in with your Google account to access the team ledger.</p>
+    <button class="google-btn" onclick="signInWithGoogle()">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+    <p class="auth-note">The first person to sign up becomes the admin.<br>Others join as members.</p>
+    <div class="err" id="loginErr" style="margin-top:14px"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+  <header>
+    <div class="hdr-left">
+      <h2>⚽ NFCC Account</h2>
+      <div class="hsub" id="hdrSub"></div>
+    </div>
+    <div class="hdr-right">
+      <span class="badge" id="roleBadge"></span>
+      <div id="hdrAvatar"></div>
+      <button id="logoutBtn" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="tab-bar">
+    <button class="active" onclick="switchTab('ledger',this)">📒 Ledger</button>
+    <button id="usersTabBtn" style="display:none" onclick="switchTab('users',this)">👥 Users</button>
+  </div>
+
+  <!-- LEDGER TAB -->
+  <div id="tabLedger">
+    <div class="balance-section">
+      <div class="balance-card">
+        <div class="blbl">Current Balance</div>
+        <div class="bamt pos" id="balDisplay">Rs 0</div>
+        <div class="stats">
+          <div class="stat"><div class="val inc" id="totalIn">Rs 0</div><div class="lbl">Total In</div></div>
+          <div class="stat"><div class="val dec" id="totalOut">Rs 0</div><div class="lbl">Total Out</div></div>
+          <div class="stat"><div class="val" id="txCount">0</div><div class="lbl">Entries</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="actions" id="adminActions" style="display:none">
+      <button class="btn-primary" onclick="openModal('credit')">+ Money In</button>
+      <button class="btn-secondary" onclick="openModal('debit')">− Expense</button>
+    </div>
+    <div class="ledger-section">
+      <div class="ledger-header">
+        <h3>Transactions</h3>
+        <div class="filter-tabs">
+          <button class="active" onclick="setFilter('all',this)">All</button>
+          <button onclick="setFilter('credit',this)">In</button>
+          <button onclick="setFilter('debit',this)">Out</button>
+        </div>
+      </div>
+      <div class="ledger-list" id="ledgerList"></div>
+    </div>
+  </div>
+
+  <!-- USERS TAB -->
+  <div id="tabUsers" style="display:none">
+    <div class="users-section" id="usersList"></div>
+  </div>
+</div>
+
+<!-- Entry Modal -->
+<div class="modal-overlay" id="entryModal">
+  <div class="modal">
+    <h3 id="modalTitle">Add Entry</h3>
+    <div class="type-toggle">
+      <button class="credit active" id="typeCredit" onclick="setType('credit')">⬆ Money In</button>
+      <button class="debit" id="typeDebit" onclick="setType('debit')">⬇ Expense</button>
+    </div>
+    <div class="form-group"><label>Description</label><input type="text" id="fDesc" placeholder="e.g. Player contribution, Match fee…"/></div>
+    <div class="form-group"><label>Amount (Rs)</label><input type="number" id="fAmount" placeholder="0" min="0"/></div>
+    <div class="form-group"><label>Date</label><input type="date" id="fDate"/></div>
+    <div class="form-group"><label>Category</label>
+      <select id="fCat">
+        <option>General</option><option>Player Contribution</option><option>Match Fee</option>
+        <option>Equipment</option><option>Travel</option><option>Tournament</option><option>Other</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="text-align:center;padding:34px 26px 38px">
+    <div style="font-size:42px;margin-bottom:12px">🗑️</div>
+    <h3>Delete Entry?</h3>
+    <p style="color:var(--muted);font-size:13px;margin:10px 0 22px">This cannot be undone.</p>
+    <div class="modal-actions" style="justify-content:center">
+      <button class="btn-cancel" style="max-width:130px" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-primary" style="max-width:130px;background:var(--red)" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ── GLOBALS ──
+let db   = null;
+let auth = null;
+let currentUser  = null; // Firestore user doc data + id
+let entriesUnsub = null;
+let currentFilter = 'all';
+let editingId  = null;
+let deletingId = null;
+let entryType  = 'credit';
+
+// ── CONFIG ──
+const CFG_KEY = 'nfcc_fb_cfg';
+
+function applyConfig() {
+  const raw = document.getElementById('fbConfigInput').value.trim();
+  try {
+    const m = raw.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error('No config object found');
+    // eslint-disable-next-line no-new-func
+    const cfg = new Function('return (' + m[0] + ')')();
+    if (!cfg.apiKey || !cfg.projectId) throw new Error('Missing apiKey or projectId');
+    localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+    bootFirebase(cfg);
+  } catch(e) {
+    document.getElementById('setupErr').textContent = 'Invalid config: ' + e.message;
+  }
+}
+
+function bootFirebase(cfg) {
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    db   = firebase.firestore();
+    auth = firebase.auth();
+    auth.onAuthStateChanged(handleAuthChange);
+  } catch(e) {
+    document.getElementById('setupErr').textContent = 'Firebase error: ' + e.message;
+    showScreen('setupScreen');
+  }
+}
+
+// ── AUTH STATE ──
+async function handleAuthChange(fbUser) {
+  if (!fbUser) { showScreen('loginScreen'); return; }
+
+  try {
+    const ref  = db.collection('users').doc(fbUser.uid);
+    const snap = await ref.get();
+
+    if (!snap.exists) {
+      // First user → super_admin, rest → member
+      const allSnap = await db.collection('users').limit(1).get();
+      const role = allSnap.empty ? 'super_admin' : 'member';
+      const data = {
+        name:      fbUser.displayName || 'User',
+        email:     fbUser.email,
+        photo:     fbUser.photoURL || '',
+        role,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await ref.set(data);
+      currentUser = { id: fbUser.uid, ...data };
+    } else {
+      currentUser = { id: fbUser.uid, ...snap.data() };
+    }
+    enterApp();
+  } catch(e) {
+    showScreen('loginScreen');
+    document.getElementById('loginErr').textContent = 'Error loading profile: ' + e.message;
+  }
+}
+
+async function signInWithGoogle() {
+  document.getElementById('loginErr').textContent = '';
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider);
+    // handleAuthChange fires automatically
+  } catch(e) {
+    if (e.code !== 'auth/popup-closed-by-user') {
+      document.getElementById('loginErr').textContent = e.message;
+    }
+  }
+}
+
+async function logout() {
+  if (entriesUnsub) { entriesUnsub(); entriesUnsub = null; }
+  currentUser = null;
+  await auth.signOut();
+  document.getElementById('app').style.display = 'none';
+  showScreen('loginScreen');
+}
+
+// ── SCREENS ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+}
+
+// ── ENTER APP ──
+function enterApp() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('app').style.display = 'block';
+
+  const role    = currentUser.role;
+  const isAdmin = role === 'admin' || role === 'super_admin';
+
+  document.getElementById('hdrSub').textContent = currentUser.name;
+
+  const badge = document.getElementById('roleBadge');
+  badge.className = 'badge ' + role;
+  badge.textContent = role === 'super_admin' ? 'Super Admin' : role.charAt(0).toUpperCase() + role.slice(1);
+
+  // Avatar
+  const avatarEl = document.getElementById('hdrAvatar');
+  if (currentUser.photo) {
+    avatarEl.innerHTML = `<img class="avatar" src="${currentUser.photo}" alt="avatar" referrerpolicy="no-referrer"/>`;
+  } else {
+    avatarEl.innerHTML = `<div class="avatar-fallback">${currentUser.name.charAt(0).toUpperCase()}</div>`;
+  }
+
+  document.getElementById('adminActions').style.display   = isAdmin ? 'flex' : 'none';
+  document.getElementById('usersTabBtn').style.display    = isAdmin ? 'block' : 'none';
+
+  subscribeEntries();
+}
+
+// ── TABS ──
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tabLedger').style.display = tab === 'ledger' ? 'block' : 'none';
+  document.getElementById('tabUsers').style.display  = tab === 'users'  ? 'block' : 'none';
+  if (tab === 'users') loadUsers();
+}
+
+// ── ENTRIES (real-time) ──
+function subscribeEntries() {
+  if (entriesUnsub) entriesUnsub();
+  entriesUnsub = db.collection('entries')
+    .orderBy('date', 'asc')
+    .onSnapshot(snap => {
+      renderLedger(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, err => toast('Sync error: ' + err.message, 'error'));
+}
+
+function fmt(n) { return 'Rs ' + Math.abs(n).toLocaleString('en-PK'); }
+function fmtDate(d) {
+  return new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function renderLedger(entries) {
+  let running = 0;
+  const withBal = entries.map(e => {
+    running += e.type === 'credit' ? e.amount : -e.amount;
+    return { ...e, _bal: running };
+  });
+
+  const totalIn  = entries.filter(e => e.type==='credit').reduce((s,e)=>s+e.amount,0);
+  const totalOut = entries.filter(e => e.type==='debit').reduce((s,e)=>s+e.amount,0);
+  const balance  = totalIn - totalOut;
+
+  document.getElementById('balDisplay').textContent = fmt(balance);
+  document.getElementById('balDisplay').className   = 'bamt ' + (balance >= 0 ? 'pos' : 'neg');
+  document.getElementById('totalIn').textContent    = fmt(totalIn);
+  document.getElementById('totalOut').textContent   = fmt(totalOut);
+  document.getElementById('txCount').textContent    = entries.length;
+
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super_admin';
+  const filtered = withBal
+    .filter(e => currentFilter === 'all' || e.type === currentFilter)
+    .reverse();
+
+  const list = document.getElementById('ledgerList');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-ico">📒</div><p>No transactions yet.${isAdmin ? ' Add one above!' : ''}</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(e => `
+    <div class="entry">
+      <div class="eicon ${e.type}">${e.type==='credit'?'⬆️':'⬇️'}</div>
+      <div class="einfo">
+        <div class="desc">${e.desc}</div>
+        <div class="meta">${fmtDate(e.date)} · ${e.category}</div>
+      </div>
+      <div class="eright">
+        <div class="eamt ${e.type}">${e.type==='credit'?'+':'-'}${fmt(e.amount)}</div>
+        <div class="ebal">Bal: ${fmt(e._bal)}</div>
+      </div>
+      ${isAdmin ? `
+      <div class="eactions">
+        <button class="icon-btn" onclick="editEntry('${e.id}')">✏️</button>
+        <button class="icon-btn del" onclick="askDelete('${e.id}')">🗑️</button>
+      </div>` : ''}
+    </div>`).join('');
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-tabs button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── ENTRY MODAL ──
+function openModal(type) {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Add Entry';
+  document.getElementById('fDesc').value   = '';
+  document.getElementById('fAmount').value = '';
+  document.getElementById('fDate').value   = new Date().toISOString().split('T')[0];
+  document.getElementById('fCat').value    = 'General';
+  setType(type || 'credit');
+  document.getElementById('entryModal').classList.add('open');
+}
+
+async function editEntry(id) {
+  const doc = await db.collection('entries').doc(id).get();
+  if (!doc.exists) return;
+  const e = doc.data();
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Edit Entry';
+  document.getElementById('fDesc').value   = e.desc;
+  document.getElementById('fAmount').value = e.amount;
+  document.getElementById('fDate').value   = e.date;
+  document.getElementById('fCat').value    = e.category;
+  setType(e.type);
+  document.getElementById('entryModal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('entryModal').classList.remove('open'); }
+
+function setType(t) {
+  entryType = t;
+  document.getElementById('typeCredit').classList.toggle('active', t==='credit');
+  document.getElementById('typeDebit').classList.toggle('active', t==='debit');
+}
+
+async function saveEntry() {
+  const desc   = document.getElementById('fDesc').value.trim();
+  const amount = parseFloat(document.getElementById('fAmount').value);
+  const date   = document.getElementById('fDate').value;
+  const cat    = document.getElementById('fCat').value;
+
+  if (!desc)            { toast('Enter a description', 'error'); return; }
+  if (!amount || amount <= 0) { toast('Enter a valid amount', 'error'); return; }
+  if (!date)            { toast('Pick a date', 'error'); return; }
+
+  const data = {
+    desc, amount, date, category: cat, type: entryType,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  if (editingId) {
+    await db.collection('entries').doc(editingId).update(data);
+    toast('Entry updated ✓', 'success');
+  } else {
+    await db.collection('entries').add({
+      ...data,
+      createdBy: currentUser.id,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('Entry added ✓', 'success');
+  }
+  closeModal();
+}
+
+// ── DELETE ──
+function askDelete(id) { deletingId = id; document.getElementById('confirmModal').classList.add('open'); }
+function closeConfirm() { deletingId = null; document.getElementById('confirmModal').classList.remove('open'); }
+async function confirmDelete() {
+  if (!deletingId) return;
+  await db.collection('entries').doc(deletingId).delete();
+  closeConfirm();
+  toast('Entry deleted', 'error');
+}
+
+// ── USERS ──
+async function loadUsers() {
+  const list = document.getElementById('usersList');
+  list.innerHTML = '<div class="users-loading"><div class="spinner"></div></div>';
+  const snap = await db.collection('users').orderBy('createdAt', 'asc').get();
+
+  if (snap.empty) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-ico">👥</div><p>No users yet</p></div>';
+    return;
+  }
+
+  list.innerHTML = snap.docs.map(doc => {
+    const u = doc.data();
+    const isSelf    = doc.id === currentUser.id;
+    const isSuperA  = u.role === 'super_admin';
+    const amSuperA  = currentUser.role === 'super_admin';
+
+    const avatarHtml = u.photo
+      ? `<img class="u-avatar" src="${u.photo}" alt="" referrerpolicy="no-referrer"/>`
+      : `<div class="u-avatar-fb">${u.name.charAt(0).toUpperCase()}</div>`;
+
+    // Super admin row: badge only, no dropdown
+    // Own row: badge only
+    // Can demote super_admin only if you are super_admin
+    let rightHtml;
+    if (isSelf || (isSuperA && !amSuperA)) {
+      const label = u.role === 'super_admin' ? 'Super Admin' : u.role.charAt(0).toUpperCase() + u.role.slice(1);
+      rightHtml = `<span class="badge ${u.role}">${label}${isSelf?' (you)':''}</span>`;
+    } else {
+      rightHtml = `
+        <select class="role-select" onchange="changeRole('${doc.id}', this.value)" ${isSuperA&&!amSuperA?'disabled':''}>
+          <option value="member"      ${u.role==='member'     ?'selected':''}>Member</option>
+          <option value="admin"       ${u.role==='admin'      ?'selected':''}>Admin</option>
+          ${amSuperA ? `<option value="super_admin" ${u.role==='super_admin'?'selected':''}>Super Admin</option>` : ''}
+        </select>`;
+    }
+
+    return `
+    <div class="user-card">
+      ${avatarHtml}
+      <div class="uinfo">
+        <div class="uname">${u.name}</div>
+        <div class="uemail">${u.email}</div>
+      </div>
+      ${rightHtml}
+    </div>`;
+  }).join('');
+}
+
+async function changeRole(userId, newRole) {
+  try {
+    await db.collection('users').doc(userId).update({ role: newRole });
+    toast(`Role updated to ${newRole} ✓`, 'success');
+    loadUsers();
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+// ── TOAST ──
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + (type || '');
+  setTimeout(() => t.className = '', 2600);
+}
+
+// Close modals on backdrop click
+document.getElementById('entryModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+document.getElementById('confirmModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeConfirm(); });
+
+// ── INIT ──
+(function init() {
+  const saved = localStorage.getItem(CFG_KEY);
+  if (saved) {
+    try { bootFirebase(JSON.parse(saved)); }
+    catch { showScreen('setupScreen'); }
+  } else {
+    showScreen('setupScreen');
+  }
+})();
+</script>
+</body>
+</html>
