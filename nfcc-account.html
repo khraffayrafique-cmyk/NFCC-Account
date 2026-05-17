@@ -150,48 +150,59 @@
   <p style="color:var(--muted);font-size:14px">Connecting…</p>
 </div>
 
-<!-- FIREBASE SETUP -->
-<div class="screen" id="setupScreen">
-  <div class="setup-card">
-    <h2>🔧 Connect Firebase</h2>
-    <p class="note">One-time setup. Create a free Firebase project and paste your config below.</p>
-    <ol class="setup-steps">
-      <li>Go to <strong>console.firebase.google.com</strong> → New project</li>
-      <li><strong>Firestore Database</strong> → Create → Test mode</li>
-      <li><strong>Authentication</strong> → Sign-in method → Enable <strong>Google</strong></li>
-      <li>Project Settings → Your Apps → Web → Copy config</li>
-    </ol>
-    <code>const firebaseConfig = {
-  apiKey: "AIza...",
-  authDomain: "your-app.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-app.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123..."
-};</code>
-    <textarea id="fbConfigInput" placeholder="Paste your firebaseConfig = { ... } here"></textarea>
-    <button class="btn-primary" style="width:100%;margin-top:14px" onclick="applyConfig()">Connect →</button>
-    <div class="err" id="setupErr"></div>
-  </div>
-</div>
 
 <!-- LOGIN -->
 <div class="screen" id="loginScreen">
   <div class="auth-card">
     <div class="logo">⚽</div>
     <h1>NFCC Team Account</h1>
-    <p class="sub">Sign in with your Google account to access the team ledger.</p>
-    <button class="google-btn" onclick="signInWithGoogle()">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-      </svg>
-      Continue with Google
-    </button>
-    <p class="auth-note">The first person to sign up becomes the admin.<br>Others join as members.</p>
-    <div class="err" id="loginErr" style="margin-top:14px"></div>
+
+    <!-- Main login options -->
+    <div id="loginMain">
+      <p class="sub">Sign in to access the team ledger.</p>
+      <button class="google-btn" onclick="signInWithGoogle()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Continue with Google
+      </button>
+      <div style="display:flex;align-items:center;gap:10px;margin:18px 0">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="color:var(--muted);font-size:12px">or</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <button class="btn-secondary" style="width:100%;padding:13px;font-size:14px" onclick="showPinPanel()">
+        🔢 View with PIN
+      </button>
+      <p class="auth-note" style="margin-top:16px">Google sign-in gives full access based on your role.<br>PIN gives view-only access.</p>
+      <div class="err" id="loginErr" style="margin-top:10px"></div>
+    </div>
+
+    <!-- PIN panel -->
+    <div id="loginPin" style="display:none">
+      <p class="sub">Enter the 4-digit PIN to view the ledger.</p>
+      <div class="pin-display" style="margin-bottom:20px">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
+      </div>
+      <div class="keypad">
+        <button onclick="pinKey('1')">1</button><button onclick="pinKey('2')">2</button><button onclick="pinKey('3')">3</button>
+        <button onclick="pinKey('4')">4</button><button onclick="pinKey('5')">5</button><button onclick="pinKey('6')">6</button>
+        <button onclick="pinKey('7')">7</button><button onclick="pinKey('8')">8</button><button onclick="pinKey('9')">9</button>
+        <button class="key-clear" onclick="pinClear()">⌫</button>
+        <button onclick="pinKey('0')">0</button>
+        <button class="key-enter" onclick="submitPin()">Enter</button>
+      </div>
+      <div class="err" id="pinErr" style="margin-top:12px"></div>
+      <div style="margin-top:16px">
+        <a style="font-size:13px;color:var(--muted);cursor:pointer" onclick="showLoginMain()">← Back</a>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -321,23 +332,17 @@ let deletingId   = null;
 let removingUser = null; // { id, name }
 let entryType    = 'credit';
 
-// ── CONFIG ──
-const CFG_KEY = 'nfcc_fb_cfg';
+// ── CONFIG (hardcoded — no setup screen needed) ──
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyDSrT5JjtLfHEewYk0MGkTkzBTMLTn8bzE",
+  authDomain:        "accountbalance-90a41.firebaseapp.com",
+  projectId:         "accountbalance-90a41",
+  storageBucket:     "accountbalance-90a41.firebasestorage.app",
+  messagingSenderId: "244675845281",
+  appId:             "1:244675845281:web:a1975efa970f447fba64e0"
+};
 
-function applyConfig() {
-  const raw = document.getElementById('fbConfigInput').value.trim();
-  try {
-    const m = raw.match(/\{[\s\S]*\}/);
-    if (!m) throw new Error('No config object found');
-    // eslint-disable-next-line no-new-func
-    const cfg = new Function('return (' + m[0] + ')')();
-    if (!cfg.apiKey || !cfg.projectId) throw new Error('Missing apiKey or projectId');
-    localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
-    bootFirebase(cfg);
-  } catch(e) {
-    document.getElementById('setupErr').textContent = 'Invalid config: ' + e.message;
-  }
-}
+const VIEW_PIN = '7888';
 
 function bootFirebase(cfg) {
   try {
@@ -346,8 +351,7 @@ function bootFirebase(cfg) {
     auth = firebase.auth();
     auth.onAuthStateChanged(handleAuthChange);
   } catch(e) {
-    document.getElementById('setupErr').textContent = 'Firebase error: ' + e.message;
-    showScreen('setupScreen');
+    console.error('Firebase error:', e);
   }
 }
 
@@ -397,10 +401,12 @@ async function signInWithGoogle() {
 
 async function logout() {
   if (entriesUnsub) { entriesUnsub(); entriesUnsub = null; }
+  const wasPinViewer = currentUser?.id === 'pin-viewer';
   currentUser = null;
-  await auth.signOut();
   document.getElementById('app').style.display = 'none';
+  showLoginMain();
   showScreen('loginScreen');
+  if (!wasPinViewer) await auth.signOut();
 }
 
 // ── SCREENS ──
@@ -684,15 +690,46 @@ document.getElementById('entryModal').addEventListener('click', e => { if(e.targ
 document.getElementById('confirmModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeConfirm(); });
 document.getElementById('removeUserModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeRemoveUser(); });
 
+// ── PIN LOGIN ──
+let pinInput = '';
+
+function pinKey(k) {
+  if (pinInput.length >= 4) return;
+  pinInput += k;
+  updatePinDots();
+  if (pinInput.length === 4) setTimeout(submitPin, 150);
+}
+function pinClear() { pinInput = pinInput.slice(0, -1); updatePinDots(); }
+function updatePinDots() {
+  for (let i = 0; i < 4; i++)
+    document.getElementById('pd' + i).classList.toggle('filled', i < pinInput.length);
+}
+function submitPin() {
+  if (pinInput === VIEW_PIN) {
+    currentUser = { id: 'pin-viewer', name: 'Guest', role: 'member', photo: '' };
+    enterApp();
+  } else {
+    document.getElementById('pinErr').textContent = 'Incorrect PIN';
+    pinInput = '';
+    updatePinDots();
+    setTimeout(() => document.getElementById('pinErr').textContent = '', 2000);
+  }
+}
+function showPinPanel() {
+  pinInput = ''; updatePinDots();
+  document.getElementById('loginMain').style.display = 'none';
+  document.getElementById('loginPin').style.display  = 'block';
+  document.getElementById('pinErr').textContent = '';
+}
+function showLoginMain() {
+  pinInput = ''; updatePinDots();
+  document.getElementById('loginPin').style.display  = 'none';
+  document.getElementById('loginMain').style.display = 'block';
+}
+
 // ── INIT ──
 (function init() {
-  const saved = localStorage.getItem(CFG_KEY);
-  if (saved) {
-    try { bootFirebase(JSON.parse(saved)); }
-    catch { showScreen('setupScreen'); }
-  } else {
-    showScreen('setupScreen');
-  }
+  bootFirebase(FIREBASE_CONFIG);
 })();
 </script>
 </body>
