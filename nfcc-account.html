@@ -274,7 +274,7 @@
   </div>
 </div>
 
-<!-- Confirm Delete -->
+<!-- Confirm Delete Entry -->
 <div class="modal-overlay" id="confirmModal">
   <div class="modal" style="text-align:center;padding:34px 26px 38px">
     <div style="font-size:42px;margin-bottom:12px">🗑️</div>
@@ -283,6 +283,21 @@
     <div class="modal-actions" style="justify-content:center">
       <button class="btn-cancel" style="max-width:130px" onclick="closeConfirm()">Cancel</button>
       <button class="btn-primary" style="max-width:130px;background:var(--red)" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Remove User -->
+<div class="modal-overlay" id="removeUserModal">
+  <div class="modal" style="text-align:center;padding:34px 26px 38px">
+    <div style="font-size:42px;margin-bottom:12px">👤</div>
+    <h3>Remove User?</h3>
+    <p style="color:var(--muted);font-size:13px;margin:10px 0 22px">
+      <strong id="removeUserName"></strong> will lose access immediately.<br>This cannot be undone.
+    </p>
+    <div class="modal-actions" style="justify-content:center">
+      <button class="btn-cancel" style="max-width:130px" onclick="closeRemoveUser()">Cancel</button>
+      <button class="btn-primary" style="max-width:130px;background:var(--red)" onclick="confirmRemoveUser()">Remove</button>
     </div>
   </div>
 </div>
@@ -301,9 +316,10 @@ let auth = null;
 let currentUser  = null; // Firestore user doc data + id
 let entriesUnsub = null;
 let currentFilter = 'all';
-let editingId  = null;
-let deletingId = null;
-let entryType  = 'credit';
+let editingId    = null;
+let deletingId   = null;
+let removingUser = null; // { id, name }
+let entryType    = 'credit';
 
 // ── CONFIG ──
 const CFG_KEY = 'nfcc_fb_cfg';
@@ -608,6 +624,8 @@ async function loadUsers() {
         </select>`;
     }
 
+    const canRemove = !isSelf && !(isSuperA && !amSuperA);
+
     return `
     <div class="user-card">
       ${avatarHtml}
@@ -616,8 +634,31 @@ async function loadUsers() {
         <div class="uemail">${u.email}</div>
       </div>
       ${rightHtml}
+      ${canRemove ? `<button class="icon-btn del" onclick="askRemoveUser('${doc.id}','${u.name.replace(/'/g,"\\'")}')">🗑️</button>` : ''}
     </div>`;
   }).join('');
+}
+
+// ── REMOVE USER ──
+function askRemoveUser(id, name) {
+  removingUser = { id, name };
+  document.getElementById('removeUserName').textContent = name;
+  document.getElementById('removeUserModal').classList.add('open');
+}
+function closeRemoveUser() {
+  removingUser = null;
+  document.getElementById('removeUserModal').classList.remove('open');
+}
+async function confirmRemoveUser() {
+  if (!removingUser) return;
+  try {
+    await db.collection('users').doc(removingUser.id).delete();
+    closeRemoveUser();
+    toast('User removed', 'error');
+    loadUsers();
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  }
 }
 
 async function changeRole(userId, newRole) {
@@ -641,6 +682,7 @@ function toast(msg, type) {
 // Close modals on backdrop click
 document.getElementById('entryModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
 document.getElementById('confirmModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeConfirm(); });
+document.getElementById('removeUserModal').addEventListener('click', e => { if(e.target===e.currentTarget) closeRemoveUser(); });
 
 // ── INIT ──
 (function init() {
